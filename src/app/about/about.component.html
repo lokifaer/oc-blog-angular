@@ -1,0 +1,13 @@
+<div class="row">
+  <div class="col-xs-12">
+    <h2>About this work</h2>
+    <p class="text-info">Hereafter are listed all the choices and <i>(hopefully)</i> improvements I made for this exercise.</p>
+    <br/>
+    <ol class="list-group">
+      <li *ngFor="let change of changes">
+        <h4 [innerHTML]="change.title"></h4>
+        <p [innerHTML]="change.text"></p>
+      </li>
+    </ol>
+  </div>
+</div>

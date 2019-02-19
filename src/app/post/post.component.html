@@ -1,0 +1,22 @@
+<li [ngClass]="{'list-group-item':true,
+				'list-group-item-success':getColor() === 'green',
+				'list-group-item-danger':getColor() === 'red'}"
+	style="margin-bottom:12px">
+	<h4>{{ post.title }}
+		<div style="float:right;color:#E31;margin-left:12px" 
+		(click)="onDelete(post)">
+			<span class="glyphicon glyphicon-remove"></span>
+		</div>
+		<div style="float:right"><small><small><i>{{ post.createdAt | date:"dd/MM/yyyy 'à' HH:mm:ss"}}</i></small></small></div>
+	</h4>
+	<p style="white-space: pre-line">{{ post.content }}</p>
+	<button [class]="getLoveBtnActiveClass('btn btn-success')" style="width: 10em"
+		(click)="onLike()"><span class="glyphicon glyphicon-heart"></span></button>&nbsp;
+	<button [class]="getLoveBtnActiveClass('btn btn-danger')" style="width: 5em"
+		(click)="onDislike()"><span class="glyphicon glyphicon-heart-empty"></span></button>
+	<div style="float:right">
+		<span class="glyphicon glyphicon-thumbs-up"></span> {{ post.ups }}<!-- <b> | </b> -->
+		<span class="glyphicon glyphicon-option-vertical"></span>
+		<span class="glyphicon glyphicon-thumbs-down"></span> {{ post.downs }} 
+	</div>
+</li>

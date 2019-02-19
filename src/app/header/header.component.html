@@ -1,0 +1,26 @@
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <ul class="nav navbar navbar-nav">
+      <li routerLinkActive="active">
+        <a style="cursor:default"
+          tooltip="Propulsed by Angular v{{ globals.getVersion() }}!"
+          [tooltipDisabled]="false"
+          [tooltipAnimation]="true"
+          tooltipPlacement="bottom">{{ globals.getTitle() }}</a>
+      </li>
+      <li routerLinkActive="active">
+        <a routerLink="posts">Posts</a>
+      </li>
+      <li routerLinkActive="active">
+        <a routerLink="new">New</a>
+      </li>
+      <li routerLinkActive="active">
+        <a routerLink="about">About...</a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<!-- <button mat-raised-button
+matTooltip="Welcome to {{ title }} with Angular v{{ version }}!"
+aria-label="Name of the website!">Alors ?</button> -->
