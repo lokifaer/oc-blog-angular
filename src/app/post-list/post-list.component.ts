@@ -13,11 +13,11 @@ import { VotesService } from '../services/votes.service';
 export class PostListComponent implements OnInit, OnDestroy {
 	posts: Post[];
 	postSubscription: Subscription;
-	// votes: Vote[];
-	// voteSubscription: Subscription;
+	userVotes: Vote[];
+	userVoteSubscription: Subscription;
 
-	constructor(private postsService: PostsService/* ,
-				private votesServices: VotesService */) { }
+	constructor(private postsService: PostsService,
+				private votesServices: VotesService) { }
 
   	ngOnInit() {
 		this.postSubscription = this.postsService.postSubject.subscribe(
@@ -28,22 +28,22 @@ export class PostListComponent implements OnInit, OnDestroy {
 		this.postsService.getPosts();
 		this.postsService.emitPosts();
 
-		// this.voteSubscription = this.votesServices.userVotesSubject.subscribe(
-		// 	(votes: Vote[]) => {
-		// 		this.votes = votes;
-		// 	}
-		// )
-		// this.votesServices.getUserVotes();
-		// this.votesServices.emitUserVotes();
+		this.userVoteSubscription = this.votesServices.userVotesSubject.subscribe(
+			(votes: Vote[]) => {
+				this.userVotes = votes;
+			}
+		)
+		this.votesServices.getUserVotes();
+		this.votesServices.emitUserVotes();
   	}
 
 	ngOnDestroy() {
 		this.postSubscription.unsubscribe();
-		// this.voteSubscription.unsubscribe();
+		this.userVoteSubscription.unsubscribe();
 	}
 
-	// getVoteFromPost(post: Post): Vote {
-	// 	const index = this.votesServices.getVoteIndexFromPostIndex(post.index);
-	// 	return index > -1 ? this.votes[index] : new Vote(post.index, '', 0);
-	// }
+	getVoteFromPost(post: Post): Vote {
+		const index = this.votesServices.getVoteIndexFromPostIndex(post.index);
+		return index > -1 ? this.userVotes[index] : new Vote(post.index, '', 0);
+	}
 }

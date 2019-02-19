@@ -12,10 +12,10 @@ import { VotesService } from '../services/votes.service';
 export class PostComponent implements OnInit {
 
   @Input() post: Post;
-  // @Input() vote: Vote;
+  @Input() userVote: Vote;
   
-  constructor(private postsService: PostsService/* ,
-              private votesService: VotesService */) { }
+  constructor(private postsService: PostsService,
+              private votesService: VotesService) { }
 
   ngOnInit() {
     // console.log(this.vote);
@@ -49,16 +49,16 @@ export class PostComponent implements OnInit {
 
   onLike()
   {
-    // this.vote.val = +!this.isLiked();
-    // this.votesService.updateVote(this.vote);
+    this.userVote.val = +!this.isLiked();
+    this.votesService.updateVote(this.userVote);
     // this.refreshVotes();
     // this.votesService.emitUserVotes();
   }
 
   onDislike()
   {
-    // this.vote.val = +!this.isDisliked()*-1;
-    // this.votesService.updateVote(this.vote);
+    this.userVote.val = +!this.isDisliked()*-1;
+    this.votesService.updateVote(this.userVote);
     // this.refreshVotes();
     // this.votesService.emitUserVotes();
   }
@@ -69,14 +69,13 @@ export class PostComponent implements OnInit {
   }
 
   isLiked(): boolean {
-    // return this.vote.val > 0 ? true : false;
-    // return this.vote.val > 0 ? 'btn btn-success active' : 'btn btn-success';
-    return false;
+    return this.userVote.val > 0 ? true : false;
+    // return false;
   }
 
   isDisliked(): boolean {
-    // return this.vote.val < 0 ? true : false;
-    return false;
+    return this.userVote.val < 0 ? true : false;
+    // return false;
   }
 
   getLoveBtnActiveClass(btnClasses: string): string {
