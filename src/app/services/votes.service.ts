@@ -15,10 +15,10 @@ export interface PostVotesAndSubject {
 })
 export class VotesService {
 
-  userVotes: Vote[] = [];
+  userVotes: Vote[] = []; // contains all the votes of the current user
   userVotesSubject = new Subject<Vote[]>();
 
-  postVotesAndSubjects: PostVotesAndSubject[] = [];
+  postVotesAndSubjects: PostVotesAndSubject[] = []; // holds the votes of all the posts displayed
 
   constructor(private globals:Globals) { }
 
@@ -26,7 +26,7 @@ export class VotesService {
     this.userVotesSubject.next(this.userVotes);
   }
 
-  emitPostVotes(postId:string) {
+  emitPostVotes(postId:string) {  // emits the right row of the array
     var current = this.postVotesAndSubjects[this.getPostVotesIndexFromPostIndex(postId)];
     if (current)
       current.subject.next(current.votes);
@@ -34,7 +34,7 @@ export class VotesService {
 
   updateVote(vote: Vote) {
     if (this.globals.getIp()) {
-      vote.userIp = this.globals.getIp();
+      vote.userIp = this.globals.getIp(); // each couple post+ip has one unique entry that I can overwrite anytime
       firebase.database().ref('/votes/'+vote.postId+'@'+vote.userIp.replace(/\./g,'',)).set(vote, 
         (error) => {
           if (error) {
@@ -49,7 +49,7 @@ export class VotesService {
   }
 
   getUserVotes() {
-    if (this.globals.getIp()) {
+    if (this.globals.getIp()) { // get all the votes of current user
       firebase.database().ref('/votes/').orderByChild('userIp').equalTo(this.globals.getIp()).on('value',
         (data) => {
           this.userVotes = data.val() ? Object.keys(data.val())
@@ -69,6 +69,7 @@ export class VotesService {
       votes:[], 
       subject:new Subject<Vote[]>()
     };
+    // get all the votes of a specific post
     firebase.database().ref('/votes/').orderByChild('postId').equalTo(postId).on('value',
       (data) => {
         newPVS.votes = data.val() ? Object.keys(data.val())
@@ -77,12 +78,12 @@ export class VotesService {
             return data.val()[index];
           }
         ) : [];
-
+        // check if it's already in the array
         var currentIndex = this.getPostVotesIndexFromPostIndex(postId);
-        if (currentIndex === -1) {
+        if (currentIndex === -1) {  // if not, push it
           this.postVotesAndSubjects.push(newPVS);
         }
-        else {
+        else {  // otherwise replace it
           this.postVotesAndSubjects.splice(currentIndex,1,newPVS);
         }
         this.emitPostVotes(postId);
@@ -94,7 +95,7 @@ export class VotesService {
 
   getUserVoteIndexFromPostIndex(postIndex:string): number {
     return this.userVotes.findIndex(
-      (vote) => {
+      (vote) => { // find the matching vote for a specified post
         return vote.postId === postIndex;
       }
     );
@@ -102,22 +103,25 @@ export class VotesService {
 
   getPostVotesIndexFromPostIndex(postIndex:string): number {
     return this.postVotesAndSubjects.findIndex(
-      (vs) => {
+      (vs) => { // find the matching PostVote object for specified post
         return vs.postId === postIndex;
       }
     );
   }
 
-  getPostVotesDowns(postIndex:string): number {
-    var downs = 0;
-    var index = this.getPostVotesIndexFromPostIndex(postIndex);
-    if (index > -1) {
-      this.postVotesAndSubjects[index].votes
-          .forEach((vs) => {
-            if (vs.val < 0) downs++;
-          }
-        );
-    }
-    return downs;
+  removeVotesOfOnePost(postIndex:string) {
+    firebase.database().ref('/votes/').orderByChild('postId').equalTo(postIndex).once('value').then(
+      (data) => { // find all votes for specified post
+        var votes = data.val() ? Object.keys(data.val()) : [];
+        votes.forEach((voteId) => { // remove them all
+          firebase.database().ref('/votes/'+voteId).remove(
+            (error) => {
+              if (error)
+                console.log(error);
+            }
+          );
+        });
+      }
+    );
   }
 }

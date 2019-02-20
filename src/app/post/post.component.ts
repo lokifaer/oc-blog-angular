@@ -23,12 +23,12 @@ export class PostComponent implements OnInit, OnDestroy {
               private globals:Globals) { }
 
   ngOnInit() {
+    // subscribe to the subject generated after init of the row in the array of PostVotes.
     this.postVotesSubscription = this.votesService.getPostVotes(this.post.index).subscribe(
           (votes: Vote[]) => {
             this.postVotes = votes;
           }
         );
-    // this.votesService.getPostVotes(this.post.index);
     this.votesService.emitPostVotes(this.post.index);
       }
 
@@ -37,7 +37,7 @@ export class PostComponent implements OnInit, OnDestroy {
   }
 
   getColor()
-  {
+  { // dynamic style...
     const ups = this.getUps();
     const downs = this.getDowns();
 	  if (ups > downs)
@@ -61,8 +61,10 @@ export class PostComponent implements OnInit, OnDestroy {
   }
 
   onDelete(post: Post) {
-    if(confirm('Are you sure you want to delete post "'+post.title+'" ?'))
+    if(confirm('Are you sure you want to delete post "'+post.title+'" ?')) {
       this.postsService.removeOnePost(post.index);
+      this.votesService.removeVotesOfOnePost(post.index);
+    }
   }
 
   isLiked(): boolean {
@@ -74,7 +76,7 @@ export class PostComponent implements OnInit, OnDestroy {
   }
 
   getLoveBtnActiveClass(btnClasses: string): string {
-    if (
+    if (  // dynamic style again..
         (btnClasses.search('success') > -1 && this.isLiked()) ||
         (btnClasses.search('danger') > -1 && this.isDisliked())
       ) {
@@ -83,7 +85,7 @@ export class PostComponent implements OnInit, OnDestroy {
     return btnClasses;
   }
 
-  getUps() {
+  getUps() {  // sum up likes
     if (!this.postVotes)
       return 0;
     else {
@@ -95,7 +97,7 @@ export class PostComponent implements OnInit, OnDestroy {
     }
   }
 
-  getDowns() {
+  getDowns() {  // sum up dislikes
     if (!this.postVotes)
       return 0;
     else {
@@ -107,7 +109,7 @@ export class PostComponent implements OnInit, OnDestroy {
     }
   }
 
-  isMine() {
+  isMine() {  // check if the user is the author
     return this.globals.getIp() === this.post.author;
   }
 }

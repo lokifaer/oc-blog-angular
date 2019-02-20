@@ -40,7 +40,6 @@ export class NewPostComponent implements OnInit {
     if (author) {
       const post = new Post(title, content, author, createdAt);
 
-      // const err = this.postsService.createNewPost(post);
       this.postsService.saveNewPost(post);
       this.router.navigate(['/posts']);
     }
