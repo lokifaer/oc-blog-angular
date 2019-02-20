@@ -1,47 +1,48 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { PostsService } from '../services/posts.service';
 import { Post } from '../models/post.model';
 import { Vote } from '../models/vote.model';
 import { VotesService } from '../services/votes.service';
+import { Globals } from '../services/globals.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-post',
   templateUrl: './post.component.html',
   styleUrls: ['./post.component.scss']
 })
-export class PostComponent implements OnInit {
+export class PostComponent implements OnInit, OnDestroy {
 
   @Input() post: Post;
   @Input() userVote: Vote;
+  postVotes: Vote[];
+  postVotesSubscription: Subscription;
   
   constructor(private postsService: PostsService,
-              private votesService: VotesService) { }
+              private votesService: VotesService,
+              private globals:Globals) { }
 
   ngOnInit() {
-    // console.log(this.vote);
-    // console.log(this.post);
-    // this.refreshVotes();
-  }
+    this.postVotesSubscription = this.votesService.getPostVotes(this.post.index).subscribe(
+          (votes: Vote[]) => {
+            this.postVotes = votes;
+          }
+        );
+    // this.votesService.getPostVotes(this.post.index);
+    this.votesService.emitPostVotes(this.post.index);
+      }
 
-  // refreshVotes() {
-  //   this.votesService.getPostVotes(this.post).then(
-  //     (postVotes: Vote[]) => {
-  //       console.log('refresh for'+this.post.index);
-  //       this.post.ups = 0;
-  //       this.post.downs = 0;
-  //       postVotes.forEach(vote => {
-  //         if (vote.val > 0) this.post.ups++;
-  //         if (vote.val < 0) this.post.downs++;
-  //       });
-  //     }
-  //   );
-  // }
+  ngOnDestroy() {
+    this.postVotesSubscription.unsubscribe();
+  }
 
   getColor()
   {
-	  if (this.post.ups > this.post.downs)
+    const ups = this.getUps();
+    const downs = this.getDowns();
+	  if (ups > downs)
 	  	return "green";
-		else if (this.post.ups < this.post.downs)
+		else if (ups < downs)
 			return "red";
 		else
 			return "regular";
@@ -51,16 +52,12 @@ export class PostComponent implements OnInit {
   {
     this.userVote.val = +!this.isLiked();
     this.votesService.updateVote(this.userVote);
-    // this.refreshVotes();
-    // this.votesService.emitUserVotes();
   }
 
   onDislike()
   {
     this.userVote.val = +!this.isDisliked()*-1;
     this.votesService.updateVote(this.userVote);
-    // this.refreshVotes();
-    // this.votesService.emitUserVotes();
   }
 
   onDelete(post: Post) {
@@ -70,12 +67,10 @@ export class PostComponent implements OnInit {
 
   isLiked(): boolean {
     return this.userVote.val > 0 ? true : false;
-    // return false;
   }
 
   isDisliked(): boolean {
     return this.userVote.val < 0 ? true : false;
-    // return false;
   }
 
   getLoveBtnActiveClass(btnClasses: string): string {
@@ -86,5 +81,33 @@ export class PostComponent implements OnInit {
       btnClasses += " active";
     }
     return btnClasses;
+  }
+
+  getUps() {
+    if (!this.postVotes)
+      return 0;
+    else {
+      var ups = 0;
+      this.postVotes.forEach((vote) => {
+        if (vote.val > 0) ups++;
+      });
+      return ups;
+    }
+  }
+
+  getDowns() {
+    if (!this.postVotes)
+      return 0;
+    else {
+      var downs = 0;
+      this.postVotes.forEach((vote) => {
+        if (vote.val < 0) downs++;
+      });
+      return downs;
+    }
+  }
+
+  isMine() {
+    return this.globals.getIp() === this.post.author;
   }
 }

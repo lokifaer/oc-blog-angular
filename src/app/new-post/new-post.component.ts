@@ -22,6 +22,7 @@ export class NewPostComponent implements OnInit {
 
   ngOnInit() {
     this.initForm();
+    this.errorMessage = '';
   }
 
   initForm() {
@@ -35,12 +36,16 @@ export class NewPostComponent implements OnInit {
     const title = this.postForm.get('title').value;
     const content = this.postForm.get('content').value;
     const createdAt = Date.now();
-    const author = this.globals.getIp() ? this.globals.getIp() : "";
+    const author = this.globals.getIp() ? this.globals.getIp() : null;
+    if (author) {
+      const post = new Post(title, content, author, createdAt);
 
-    const post = new Post(title, content, author, createdAt);
-
-    // const err = this.postsService.createNewPost(post);
-    this.postsService.saveNewPost(post);
-    this.router.navigate(['/posts']);
+      // const err = this.postsService.createNewPost(post);
+      this.postsService.saveNewPost(post);
+      this.router.navigate(['/posts']);
+    }
+    else {
+      this.errorMessage = 'You can\'t post anything because you appear to be disconnected from the Internet.';
+    }
   }
 }

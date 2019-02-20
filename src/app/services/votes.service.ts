@@ -3,7 +3,12 @@ import { Vote } from '../models/vote.model';
 import { Subject } from 'rxjs';
 import { Globals } from './globals.service';
 import * as firebase from 'firebase';
-import { Post } from '../models/post.model';
+
+export interface PostVotesAndSubject {
+  postId:string,
+  votes:Vote[],
+  subject:Subject<Vote[]>
+}
 
 @Injectable({
   providedIn: 'root'
@@ -11,13 +16,20 @@ import { Post } from '../models/post.model';
 export class VotesService {
 
   userVotes: Vote[] = [];
-  postVotes: Vote[] = [];
   userVotesSubject = new Subject<Vote[]>();
+
+  postVotesAndSubjects: PostVotesAndSubject[] = [];
 
   constructor(private globals:Globals) { }
 
   emitUserVotes() {
     this.userVotesSubject.next(this.userVotes);
+  }
+
+  emitPostVotes(postId:string) {
+    var current = this.postVotesAndSubjects[this.getPostVotesIndexFromPostIndex(postId)];
+    if (current)
+      current.subject.next(current.votes);
   }
 
   updateVote(vote: Vote) {
@@ -52,37 +64,60 @@ export class VotesService {
     }
   }
 
-  getPostVotes(post: Post) {
-    return new Promise(
-      (resolve, reject) => {
-        firebase.database().ref('/votes/').orderByChild('postId').equalTo(post.index).on('value',
-          (data) => {
-            this.postVotes = data.val() ? Object.keys(data.val())
-              .map(
-                (index) => {
-                  return data.val()[index];
-                }
-              ) : [];
-            resolve(this.postVotes);
-          },
-          (error) => {
-            reject(error);
+  getPostVotes(postId:string):Subject<Vote[]> {
+    var newPVS:PostVotesAndSubject = {postId:postId, 
+      votes:[], 
+      subject:new Subject<Vote[]>()
+    };
+    firebase.database().ref('/votes/').orderByChild('postId').equalTo(postId).on('value',
+      (data) => {
+        newPVS.votes = data.val() ? Object.keys(data.val())
+        .map(
+          (index) => {
+            return data.val()[index];
           }
-        );
+        ) : [];
+
+        var currentIndex = this.getPostVotesIndexFromPostIndex(postId);
+        if (currentIndex === -1) {
+          this.postVotesAndSubjects.push(newPVS);
+        }
+        else {
+          this.postVotesAndSubjects.splice(currentIndex,1,newPVS);
+        }
+        this.emitPostVotes(postId);
+      }
+    );
+
+    return newPVS.subject;
+  }
+
+  getUserVoteIndexFromPostIndex(postIndex:string): number {
+    return this.userVotes.findIndex(
+      (vote) => {
+        return vote.postId === postIndex;
       }
     );
   }
 
-  getVoteIndexFromPostIndex(postIndex: string): number {
-    var indexToReturn:number = -1;
-    this.userVotes.forEach(
-      (vote, index) => {
-        if (vote.postId === postIndex) {
-          indexToReturn = index;
-          return true;
-        }
+  getPostVotesIndexFromPostIndex(postIndex:string): number {
+    return this.postVotesAndSubjects.findIndex(
+      (vs) => {
+        return vs.postId === postIndex;
       }
     );
-    return indexToReturn;
+  }
+
+  getPostVotesDowns(postIndex:string): number {
+    var downs = 0;
+    var index = this.getPostVotesIndexFromPostIndex(postIndex);
+    if (index > -1) {
+      this.postVotesAndSubjects[index].votes
+          .forEach((vs) => {
+            if (vs.val < 0) downs++;
+          }
+        );
+    }
+    return downs;
   }
 }

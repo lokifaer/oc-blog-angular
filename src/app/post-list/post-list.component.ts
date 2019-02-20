@@ -43,7 +43,7 @@ export class PostListComponent implements OnInit, OnDestroy {
 	}
 
 	getVoteFromPost(post: Post): Vote {
-		const index = this.votesServices.getVoteIndexFromPostIndex(post.index);
+		const index = this.votesServices.getUserVoteIndexFromPostIndex(post.index);
 		return index > -1 ? this.userVotes[index] : new Vote(post.index, '', 0);
 	}
 }
